@@ -1,0 +1,153 @@
+require("dotenv").config();
+const express = require("express");
+const mongoose = require("mongoose");
+
+const app = express();
+const port = 3000;
+
+/* 🔴 PASTE THESE TWO LINES BELOW THIS COMMENT */
+app.use(express.json());                 // 1️⃣ Enable JSON
+
+const authRoutes = require("./routes/auth"); // 2️⃣ Import routes
+app.use("/api", authRoutes);              // 2️⃣ Use routes
+/* 🔴 PASTE ENDS HERE */
+
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log("MongoDB Connected"))
+  .catch(err => console.log(err));
+
+app.listen(port, () => {
+  console.log(`Express server running on port ${port}`);
+})const bcrypt = require("bcrypt");
+const express = require("express");
+const mongoose = require("mongoose");
+const User = require("./models/user");
+
+const app = express();
+
+// Middleware to read JSON body
+app.use(express.json());
+
+// MongoDB Connection
+mongoose
+  .connect(
+    "mongodb+srv://jain2006devansh:devansh2006@cluster0.jbs47ak.mongodb.net/?appName=Cluster0"
+  )
+  .then(() => console.log("MongoDB Connected"))
+  .catch((err) => console.log("MongoDB Connection Error:", err));
+
+// ================= ROUTES =================
+
+// Home Route
+app.get("/", (req, res) => {
+  res.send("Hello from Express Server");
+});
+
+// About Route
+app.get("/about", (req, res) => {
+  res.send("This is About Page");
+});
+
+app.post("/api/register", async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    // Basic validation
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        message: "All fields are required",
+      });
+    }
+
+    const user = await User.create({
+      name,
+      email,
+      password,
+    });
+
+    res.status(201).json({
+      message: "User registered successfully",
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Registration failed",
+      error: error.message,
+    });
+  }
+});
+
+
+
+// 🔥 TEST USER SAVE ROUTE (VERY IMPORTANT)
+app.get("/create-user", async (req, res) => {
+  try {
+    const user = await User.create({
+      name: "WCTM",
+      email: "testuser10@gmail.com",
+      password: "1234567810",
+    });
+
+    res.json({
+      message: "User saved successfully",
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error saving user",
+      error: error.message,
+    });
+  }
+});
+
+
+
+// ================= SERVER =================
+app.listen(3000, () => {
+  console.log("Express server running on port 3000");
+});
+
+//login route
+
+app.post("/api/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // 1. Basic validation
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Email and password required",
+      });
+    }
+
+    // 2. Check user exists
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    // 3. Check password match
+
+if (user.password !== password) {
+      return res.status(401).json({
+        message: "Invalid password",
+      });
+    }
+
+    // 4. Success
+    res.status(200).json({
+      message: "Login successful",
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Login failed",
+      error: error.message,
+    });
+  }
+});
+
+console.log("LOGIN ROUTE FILE RUNNING");
